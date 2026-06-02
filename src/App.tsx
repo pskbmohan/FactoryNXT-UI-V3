@@ -1,6 +1,22 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+
+import { AppLayout } from '@/components/layout/AppLayout';
+import { useAuthStore } from '@/store/auth';
+
+import Dashboard from '@/pages/Dashboard';
+import Login from '@/pages/Login';
+import Plants from '@/pages/Plants';
+import Lines from '@/pages/Lines';
+import Stations from '@/pages/Stations';
+import Equipment from '@/pages/Equipment';
+import Orders from '@/pages/Orders';
+import Inventory from '@/pages/Inventory';
+import NCR from '@/pages/NCR';
+import CAPA from '@/pages/CAPA';
+import Traceability from '@/pages/Traceability';
+import Users from '@/pages/Users';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -11,39 +27,52 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Redirects unauthenticated users to /login */
+function RequireAuth() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+}
+
+/** Redirects already-authenticated users away from /login */
+function RedirectIfAuthed() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <div className="min-h-screen bg-background text-foreground antialiased">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route
-              path="/dashboard"
-              element={
-                <div className="flex items-center justify-center min-h-screen">
-                  <div className="text-center space-y-2">
-                    <h1 className="text-xl font-semibold text-foreground">FactoryNXT MES</h1>
-                    <p className="text-sm text-muted-foreground">Manufacturing Execution System</p>
-                  </div>
-                </div>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                <div className="flex items-center justify-center min-h-screen">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-lg font-medium">404 — Page not found</h2>
-                    <a href="/" className="text-sm text-primary hover:underline">Go home</a>
-                  </div>
-                </div>
-              }
-            />
-          </Routes>
-        </div>
-        <Toaster richColors position="top-right" />
+        <Routes>
+          {/* Public */}
+          <Route element={<RedirectIfAuthed />}>
+            <Route path="/login" element={<Login />} />
+          </Route>
+
+          {/* Protected — all routes share AppLayout as shell */}
+          <Route element={<RequireAuth />}>
+            <Route element={<AppLayout />}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/plants" element={<Plants />} />
+              <Route path="/lines" element={<Lines />} />
+              <Route path="/stations" element={<Stations />} />
+              <Route path="/equipment" element={<Equipment />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/ncr" element={<NCR />} />
+              <Route path="/capa" element={<CAPA />} />
+              <Route path="/traceability" element={<Traceability />} />
+              <Route path="/users" element={<Users />} />
+            </Route>
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </BrowserRouter>
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }
