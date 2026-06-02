@@ -1,0 +1,12 @@
+# Local overrides – not committed to CI.
+# Mount frontend as a volume so Vite HMR works inside Docker.
+# Only used when running the full stack locally.
+
+version: "3.9"
+
+services:
+  backend:
+    volumes:
+      - ../backend:/app        # live-reload backend source
+    environment:
+      RELOAD: "true"           # uvicorn --reload equivalent flag
