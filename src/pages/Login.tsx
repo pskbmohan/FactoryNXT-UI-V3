@@ -9,7 +9,13 @@ import { apiClient } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -36,12 +42,35 @@ export function Login() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post('/api/v1/auth/login', data);
-      const { access_token, refresh_token, user } = response.data;
+      // Backend uses OAuth2PasswordRequestForm — must send as form-urlencoded
+      const formBody = new URLSearchParams({
+        username: data.username,
+        password: data.password,
+      });
+
+      const tokenRes = await apiClient.post(
+        '/api/v1/auth/token',
+        formBody.toString(),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+
+      const { access_token, refresh_token } = tokenRes.data;
+
+      // Fetch the user profile using the new token
+      const meRes = await apiClient.get('/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+
+      const user = meRes.data; // { user_id, username, roles, plant_codes }
+
       login(user, access_token, refresh_token);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        'Login failed. Check your credentials.'
+      );
     } finally {
       setLoading(false);
     }
@@ -64,22 +93,26 @@ export function Login() {
                 {error}
               </div>
             )}
+
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
+                autoComplete="username"
                 {...register('username')}
-                placeholder="Enter your username"
+                placeholder="e.g. admin"
               />
               {errors.username && (
                 <p className="text-sm text-destructive">{errors.username.message}</p>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 {...register('password')}
                 placeholder="Enter your password"
               />
@@ -87,9 +120,16 @@ export function Login() {
                 <p className="text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Signing in…' : 'Sign in'}
             </Button>
+
+            {/* Seed credential hint — remove in production */}
+            <p className="text-xs text-center text-muted-foreground pt-1">
+              Seed accounts: <code>admin</code> / <code>operator1</code> / <code>engineer1</code>
+              &nbsp;· password: <code>factorynxt2024</code>
+            </p>
           </form>
         </CardContent>
       </Card>
