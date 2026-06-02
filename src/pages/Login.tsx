@@ -42,27 +42,14 @@ export function Login() {
     setLoading(true);
     setError(null);
     try {
-      // Backend uses OAuth2PasswordRequestForm — must send as form-urlencoded
-      const formBody = new URLSearchParams({
+      // POST JSON to /api/v1/auth/login
+      // Response: { access_token, refresh_token, token_type, user: { user_id, username, roles, plant_codes } }
+      const response = await apiClient.post('/api/v1/auth/login', {
         username: data.username,
         password: data.password,
       });
 
-      const tokenRes = await apiClient.post(
-        '/api/v1/auth/token',
-        formBody.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
-
-      const { access_token, refresh_token } = tokenRes.data;
-
-      // Fetch the user profile using the new token
-      const meRes = await apiClient.get('/api/v1/auth/me', {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
-
-      const user = meRes.data; // { user_id, username, roles, plant_codes }
-
+      const { access_token, refresh_token, user } = response.data;
       login(user, access_token, refresh_token);
       navigate('/');
     } catch (err: any) {
@@ -125,9 +112,8 @@ export function Login() {
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
 
-            {/* Seed credential hint — remove in production */}
             <p className="text-xs text-center text-muted-foreground pt-1">
-              Seed accounts: <code>admin</code> / <code>operator1</code> / <code>engineer1</code>
+              Use: <code>admin</code> / <code>operator1</code> / <code>engineer1</code>
               &nbsp;· password: <code>factorynxt2024</code>
             </p>
           </form>
