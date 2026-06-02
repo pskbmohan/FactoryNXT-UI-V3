@@ -5,18 +5,18 @@ import { Toaster } from 'sonner';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuthStore } from '@/store/auth';
 
-import Dashboard from '@/pages/Dashboard';
-import Login from '@/pages/Login';
-import Plants from '@/pages/Plants';
-import Lines from '@/pages/Lines';
-import Stations from '@/pages/Stations';
-import Equipment from '@/pages/Equipment';
-import Orders from '@/pages/Orders';
-import Inventory from '@/pages/Inventory';
-import NCR from '@/pages/NCR';
-import CAPA from '@/pages/CAPA';
-import Traceability from '@/pages/Traceability';
-import Users from '@/pages/Users';
+import { Dashboard } from '@/pages/Dashboard';
+import { Login } from '@/pages/Login';
+import { Plants } from '@/pages/Plants';
+import { Lines } from '@/pages/Lines';
+import { Stations } from '@/pages/Stations';
+import { Equipment } from '@/pages/Equipment';
+import { Orders } from '@/pages/Orders';
+import { Inventory } from '@/pages/Inventory';
+import { NCR } from '@/pages/NCR';
+import { CAPA } from '@/pages/CAPA';
+import { Traceability } from '@/pages/Traceability';
+import { Users } from '@/pages/Users';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +36,7 @@ function RequireAuth() {
 /** Redirects already-authenticated users away from /login */
 function RedirectIfAuthed() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
 function App() {
